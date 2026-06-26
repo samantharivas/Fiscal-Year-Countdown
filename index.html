@@ -188,7 +188,6 @@ body {
     justify-content: center;
     align-items: flex-start;
     gap: 0.6rem;
-    transition: all 0.2s ease;
 }
 
 .time-unit {
@@ -207,7 +206,9 @@ body {
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 0.5rem 0.9rem;
-    min-width: 1.6ch;
+    box-sizing: border-box;
+    width: 3.4ch;
+    font-variant-numeric: tabular-nums;
     text-align: center;
     text-shadow: 0 0 20px var(--gold-glow);
     box-shadow:
