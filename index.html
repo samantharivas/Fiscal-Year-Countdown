@@ -239,8 +239,45 @@ body {
         inset 0 0 18px rgba(255,255,255,0.35),
         inset -6px -8px 22px rgba(80,55,0,0.55);
     animation: ballGlow 0.9s ease-in-out infinite alternate;
-    transition: top 0.9s linear;
+    transition: top 0.9s linear, transform 0.6s ease, box-shadow 0.6s ease;
     z-index: 2;
+}
+
+/* Final 10 seconds: isolate into a focused full-screen view (starry sky kept) */
+#card.finale {
+    position: fixed;
+    inset: 0;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+    background: radial-gradient(ellipse at center,
+        rgba(8,11,16,0.35) 0%, rgba(5,7,10,0.7) 100%);
+    border: none;
+    border-radius: 0;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+    z-index: 15;
+    animation: finaleIn 0.6s ease both;
+}
+
+@keyframes finaleIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* Hide everything except the seconds number */
+#card.finale #title,
+#card.finale #subtitle-label,
+#card.finale #pole-sign,
+#card.finale .divider,
+#card.finale #ball-track,
+#card.finale #countdown-label {
+    display: none;
 }
 
 /* Rotating crystal shimmer sweeping across the facets */
@@ -337,67 +374,62 @@ body {
     50% { opacity: 0.25; }
 }
 
-/* Final 10 seconds mode */
+/* Final 10 seconds mode — collapse to a single big pulsing seconds number,
+   keeping the ball drop and sign fully visible */
 #countdown.big {
-    flex-direction: column;
     gap: 0;
 }
 
-/* Full blackout overlay during the final 10 seconds */
-body.blackout::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: #000;
-    z-index: 40;
-    animation: blackoutIn 0.6s ease forwards;
-}
-
-@keyframes blackoutIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-}
-
+/* Hide every unit except the seconds, and the colons */
 #countdown.big .time-unit,
-#countdown.big .colon,
-#countdown.big .unit-label {
+#countdown.big .colon {
     display: none;
 }
 
-/* Big final number — direct child of body, sits above blackout */
-#bigCount {
-    display: none;
-    position: fixed;
-    inset: 0;
-    margin: auto;
-    width: 100%;
-    height: 100%;
-    justify-content: center;
-    align-items: center;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 24rem;
-    font-weight: 900;
-    line-height: 1;
-    color: var(--gold);
-    text-shadow: 0 0 80px var(--gold-glow), 0 0 160px rgba(255,215,0,0.4);
-    z-index: 50;
-    pointer-events: none;
-}
-
-body.blackout #bigCount {
+#countdown.big .time-unit:last-child {
     display: flex;
 }
 
-/* Each tick: burst in huge, then settle */
-#bigCount.tick {
-    animation: countPop 1s ease-out;
+/* The seconds number styled like the FY 2027 neon sign — LED dot-matrix fill */
+#countdown.big .time-unit:last-child .tile {
+    font-size: 22rem;
+    width: auto;
+    padding: 0;
+    border: none;
+    background:
+        radial-gradient(circle, #fff6cf 0 2px, rgba(255,215,0,0.28) 2.6px, transparent 3.4px) 0 0 / 11px 11px,
+        linear-gradient(#ffd700, #ffb800);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    text-shadow: none;
+    box-shadow: none;
+    filter:
+        drop-shadow(0 0 8px var(--gold-glow))
+        drop-shadow(0 0 22px rgba(255,215,0,0.55))
+        drop-shadow(0 0 44px rgba(255,215,0,0.35));
 }
 
-@keyframes countPop {
-    0%   { transform: scale(2.8); opacity: 0; }
-    15%  { transform: scale(1);   opacity: 1; }
-    70%  { transform: scale(1);   opacity: 1; }
-    100% { transform: scale(0.7); opacity: 0; }
+#countdown.big .time-unit:last-child .unit-label {
+    font-size: 0.8rem;
+    letter-spacing: 6px;
+    margin-top: 0.6rem;
+    color: var(--gold);
+    text-shadow: 0 0 12px var(--gold-glow);
+}
+
+/* Each tick: heartbeat burst, then settle */
+.tile.tick {
+    animation: countPulse 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes countPulse {
+    0%   { transform: scale(1.8); opacity: 0; }
+    22%  { transform: scale(0.92); opacity: 1; }
+    40%  { transform: scale(1.06); }
+    60%  { transform: scale(0.98); }
+    100% { transform: scale(1);    opacity: 1; }
 }
 
 /* Floating sparkles */
@@ -463,10 +495,22 @@ body.blackout #bigCount {
 #celebration h1 {
     font-family: 'Orbitron', sans-serif;
     font-size: 5rem;
-    color: var(--gold);
-    text-shadow: 0 0 40px var(--gold-glow), 0 0 80px rgba(255,215,0,0.3);
+    background: linear-gradient(100deg,
+        #b8860b 0%, #ffd700 25%, #fff6cf 50%, #ffd700 75%, #b8860b 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    filter: drop-shadow(0 0 40px var(--gold-glow));
     margin-bottom: 0.5rem;
-    animation: celebIn 1s ease-out both;
+    animation:
+        celebIn 1s cubic-bezier(0.34, 1.56, 0.64, 1) both,
+        shimmer 4s linear infinite;
+}
+
+@keyframes shimmer {
+    to { background-position: 200% center; }
 }
 
 #celebration .subtitle {
@@ -475,15 +519,27 @@ body.blackout #bigCount {
     color: #fff;
     letter-spacing: 6px;
     text-shadow: 0 0 20px rgba(255,255,255,0.6);
-    animation: celebIn 1s 0.4s ease-out both;
+    animation: celebIn 1s 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
     margin-bottom: 1.5rem;
+}
+
+#celebration .year-pop {
+    display: inline-block;
+    color: var(--gold);
+    text-shadow: 0 0 24px var(--gold-glow);
+    animation: yearPop 1s 0.7s cubic-bezier(0.34, 1.8, 0.64, 1) both;
+}
+
+@keyframes yearPop {
+    0%   { transform: scale(0) rotate(-12deg); opacity: 0; }
+    100% { transform: scale(1) rotate(0);      opacity: 1; }
 }
 
 #celebration p {
     font-size: 1.1rem;
     letter-spacing: 3px;
     color: var(--text-dim);
-    animation: celebIn 1s 0.8s ease-out both;
+    animation: celebIn 1s 0.9s ease-out both;
     text-transform: uppercase;
 }
 
@@ -519,23 +575,21 @@ canvas {
         <div id="pole-sign"><span>FY</span><span>2027</span></div>
         <div class="divider"></div>
         <div id="countdown">
-            <div class="time-unit"><div class="tile" id="d">00</div><div class="unit-label">Days</div></div>
-            <div class="colon">:</div>
+            <div class="time-unit" id="daysUnit"><div class="tile" id="d">00</div><div class="unit-label">Days</div></div>
+            <div class="colon" id="daysColon">:</div>
             <div class="time-unit"><div class="tile" id="h">00</div><div class="unit-label">Hours</div></div>
             <div class="colon">:</div>
             <div class="time-unit"><div class="tile" id="mi">00</div><div class="unit-label">Minutes</div></div>
             <div class="colon">:</div>
-            <div class="time-unit"><div class="tile" id="se">00</div><div class="unit-label">Seconds</div></div>
+            <div class="time-unit"><div class="tile" id="se">00</div><div class="unit-label" id="seLabel">Seconds</div></div>
         </div>
         <div id="countdown-label">Until the Ball Drops 🥂</div>
     </div>
 </div>
 
-<div id="bigCount"></div>
-
 <div id="celebration">
-    <h1>🎆 HAPPY NEW FISCAL YEAR 🎆</h1>
-    <div class="subtitle">FY2027 IS HERE!</div>
+    <h1> HAPPY NEW FISCAL YEAR </h1>
+    <div class="subtitle">FY<span class="year-pop">2027</span> IS HERE!</div>
     <p>🥂 Cheers to the New Fiscal Year 🥂</p>
 </div>
 
@@ -569,8 +623,11 @@ const dEl  = document.getElementById("d");
 const hEl  = document.getElementById("h");
 const miEl = document.getElementById("mi");
 const seEl = document.getElementById("se");
+const seLabelEl = document.getElementById("seLabel");
+const daysUnitEl = document.getElementById("daysUnit");
+const daysColonEl = document.getElementById("daysColon");
 const ballEl = document.getElementById("ball");
-const finalEl = document.getElementById("bigCount");
+const cardEl = document.getElementById("card");
 
 const pad = n => String(n).padStart(2, "0");
 let lastSecond = null;
@@ -607,20 +664,32 @@ function updateCountdown() {
 
     if (total <= 10) {
         countdownEl.classList.add("big");
-        document.body.classList.add("blackout");
+        cardEl.classList.add("finale");
+        seLabelEl.textContent = "Seconds Left";
 
         if (lastSecond !== s) {
-            finalEl.textContent = total;
-            // Re-trigger the pop animation
-            finalEl.classList.remove("tick");
-            void finalEl.offsetWidth;   // force reflow
-            finalEl.classList.add("tick");
-            beep();
+            seEl.textContent = total;
+
+            // Re-trigger the pulse animation
+            seEl.classList.remove("tick");
+            void seEl.offsetWidth;   // force reflow
+            seEl.classList.add("tick");
+
+            // Rising pitch in the final 3 seconds for extra tension
+            beep(total <= 3 ? 660 + (4 - total) * 180 : 880);
             lastSecond = s;
         }
     } else {
         countdownEl.classList.remove("big");
-        document.body.classList.remove("blackout");
+        cardEl.classList.remove("finale");
+        seEl.classList.remove("tick");
+        seLabelEl.textContent = "Seconds";
+
+        // Drop the Days tile once less than a day remains
+        const showDays = d > 0;
+        daysUnitEl.style.display  = showDays ? "" : "none";
+        daysColonEl.style.display = showDays ? "" : "none";
+
         dEl.textContent  = pad(d);
         hEl.textContent  = pad(h);
         miEl.textContent = pad(m);
@@ -875,13 +944,13 @@ function getCtx() {
 }
 
 // Countdown tick beep
-function beep() {
+function beep(freq = 880) {
     try {
         const ctx = getCtx();
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = "sine";
-        osc.frequency.value = 880;
+        osc.frequency.value = freq;
         gain.gain.setValueAtTime(0.0001, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + 0.01);
         gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.18);
@@ -928,7 +997,6 @@ function startCelebration() {
     if (celebrationStarted) return;
     celebrationStarted = true;
 
-    document.body.classList.remove("blackout");
     celebrationEl.style.display = "flex";
 
     playAuldLangSyne();
@@ -950,13 +1018,13 @@ function startCelebration() {
 
     makeConfettiBurst();
 
-    // Stop after 30 seconds
+    // Stop after 2 minutes
     setTimeout(() => {
         clearInterval(fwInterval);
         clearInterval(confInterval);
         fwRunning      = false;
         confettiRunning = false;
-    }, 30000);
+    }, 120000);
 }
 </script>
 
