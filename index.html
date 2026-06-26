@@ -89,6 +89,7 @@ body {
 #card {
     display: inline-block;
     padding: 3rem 5rem;
+    text-align: center;
     background:
         linear-gradient(160deg, rgba(30,34,44,0.92) 0%, rgba(13,17,26,0.94) 100%);
     border: 1px solid var(--border);
@@ -131,19 +132,75 @@ body {
 /* ── Times Square ball drop ── */
 #ball-track {
     position: relative;
-    width: 8px;
+    width: 4px;
     height: 150px;
-    margin: 0 auto 0.8rem;
+    margin: 0 auto 0.6rem;
+    background: linear-gradient(to right,
+        rgba(180,190,210,0.15),
+        rgba(220,228,240,0.85),
+        rgba(180,190,210,0.15));
+    border-radius: 2px;
+    box-shadow: 0 0 6px rgba(200,210,230,0.35);
+}
+
+/* Star topper at the very top of the flagpole */
+#ball-track::before {
+    content: '★';
+    position: absolute;
+    top: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 16px;
+    line-height: 1;
+    color: var(--gold);
+    text-shadow: 0 0 10px var(--gold-glow);
+}
+
+/* Rooftop base platform the pole stands on */
+#ball-track::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 50%;
+    width: 30px;
+    height: 5px;
+    transform: translateX(-50%);
+    border-radius: 2px;
+    background: linear-gradient(to bottom, #aeb6c6, #6c7488);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+/* Freestanding neon FY 2027 characters at the base of the pole */
+#pole-sign {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin: 0 auto 1.6rem;
+}
+
+#pole-sign span {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    letter-spacing: 3px;
+    /* LED-bulb dot matrix filling the characters (gold neon) */
     background:
-        repeating-linear-gradient(to bottom,
-            rgba(255,215,0,0.35) 0px,
-            rgba(255,215,0,0.35) 2px,
-            transparent 2px,
-            transparent 15px),
-        linear-gradient(to bottom, rgba(255,215,0,0.5), rgba(255,215,0,0.08));
-    border: 1px solid rgba(255,215,0,0.3);
-    border-radius: 4px;
-    box-shadow: 0 0 12px rgba(255,215,0,0.25), inset 0 0 8px rgba(0,0,0,0.5);
+        radial-gradient(circle, #fff6cf 0 1px, rgba(255,215,0,0.25) 1.4px, transparent 2px) 0 0 / 5px 5px,
+        linear-gradient(#ffd700, #ffb800);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    filter:
+        drop-shadow(0 0 4px var(--gold-glow))
+        drop-shadow(0 0 10px rgba(255,215,0,0.35));
+}
+
+#pole-sign span:first-child {
+    font-size: 1.9rem;
+}
+
+#pole-sign span:last-child {
+    font-size: 1.9rem;
 }
 
 #ball {
@@ -154,27 +211,71 @@ body {
     height: 84px;
     transform: translateX(-50%);
     border-radius: 50%;
+    overflow: hidden;
     background:
-        radial-gradient(circle at 35% 30%, #fffef5 0%, #ffe44d 30%, #ffd700 55%, #b8860b 100%);
+        /* fine geodesic triangle tessellation — three 60°-offset grids = equilateral panels */
+        repeating-linear-gradient(60deg,
+            rgba(120,80,0,0.30) 0 0.5px, transparent 0.5px 10px),
+        repeating-linear-gradient(-60deg,
+            rgba(120,80,0,0.30) 0 0.5px, transparent 0.5px 10px),
+        repeating-linear-gradient(0deg,
+            rgba(120,80,0,0.24) 0 0.5px, transparent 0.5px 8.66px),
+        /* faint bright facet edges catching light */
+        repeating-linear-gradient(60deg,
+            rgba(255,255,255,0.10) 0 0.5px, transparent 0.5px 10px),
+        repeating-linear-gradient(-60deg,
+            rgba(255,255,255,0.10) 0 0.5px, transparent 0.5px 10px),
+        /* random crystal glints */
+        radial-gradient(circle at 30% 26%, rgba(255,255,255,0.9) 0%, transparent 6%),
+        radial-gradient(circle at 62% 40%, rgba(255,255,255,0.5) 0%, transparent 5%),
+        radial-gradient(circle at 44% 64%, rgba(255,255,255,0.4) 0%, transparent 5%),
+        /* spherical body shading + darkened rim for roundness */
+        radial-gradient(circle at 35% 30%,
+            #fffef5 0%, #ffe85a 24%, #ffcf00 50%, #b07d05 82%, #6e4d04 100%);
     box-shadow:
         0 0 35px rgba(255,215,0,0.95),
         0 0 70px rgba(255,215,0,0.6),
         0 0 110px rgba(255,215,0,0.35),
-        inset 0 0 16px rgba(255,255,255,0.7);
+        inset 0 0 18px rgba(255,255,255,0.35),
+        inset -6px -8px 22px rgba(80,55,0,0.55);
     animation: ballGlow 0.9s ease-in-out infinite alternate;
     transition: top 0.9s linear;
     z-index: 2;
 }
 
-/* Sparkle facets on the ball */
+/* Rotating crystal shimmer sweeping across the facets */
+#ball::before {
+    content: '';
+    position: absolute;
+    inset: -25%;
+    border-radius: 50%;
+    background:
+        conic-gradient(from 0deg,
+            transparent 0deg,
+            rgba(255,255,255,0.28) 25deg,
+            transparent 60deg,
+            rgba(255,255,255,0.18) 140deg,
+            transparent 200deg,
+            rgba(255,255,255,0.22) 300deg,
+            transparent 360deg);
+    mix-blend-mode: screen;
+    animation: ballSpin 6s linear infinite;
+}
+
+/* Bright top specular highlight */
 #ball::after {
     content: '';
     position: absolute;
     inset: 0;
     border-radius: 50%;
     background:
-        radial-gradient(circle at 70% 65%, rgba(255,255,255,0.5) 0%, transparent 18%),
-        radial-gradient(circle at 25% 60%, rgba(255,255,255,0.35) 0%, transparent 14%);
+        radial-gradient(circle at 34% 26%, rgba(255,255,255,0.85) 0%, transparent 22%);
+    pointer-events: none;
+}
+
+@keyframes ballSpin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
 }
 
 @keyframes ballGlow {
@@ -412,9 +513,10 @@ canvas {
 
 <div id="container">
     <div id="card">
-        <div id="ball-track"><div id="ball"></div></div>
         <div id="title">✨ New Fiscal Year ✨</div>
         <div id="subtitle-label">Countdown to FY2027 &bull; July 1, 2026</div>
+        <div id="ball-track"><div id="ball"></div></div>
+        <div id="pole-sign"><span>FY</span><span>2027</span></div>
         <div class="divider"></div>
         <div id="countdown">
             <div class="time-unit"><div class="tile" id="d">00</div><div class="unit-label">Days</div></div>
