@@ -88,8 +88,9 @@ body {
 /* Frosted glass card */
 #card {
     display: inline-block;
-    padding: 3rem 5rem;
+    padding: 5.5rem 9.5rem;
     text-align: center;
+    transition: opacity 0.6s ease, transform 0.6s ease;
     background:
         linear-gradient(160deg, rgba(30,34,44,0.92) 0%, rgba(13,17,26,0.94) 100%);
     border: 1px solid var(--border);
@@ -102,9 +103,15 @@ body {
         inset 0 1px 0 rgba(255,255,255,0.05);
 }
 
+#card.fade-out {
+    opacity: 0;
+    transform: scale(0.92);
+    pointer-events: none;
+}
+
 #title {
     font-family: 'Orbitron', sans-serif;
-    font-size: 1.1rem;
+    font-size: 1.8rem;
     font-weight: 700;
     letter-spacing: 8px;
     color: var(--gold);
@@ -114,7 +121,7 @@ body {
 }
 
 #subtitle-label {
-    font-size: 0.75rem;
+    font-size: 0.95rem;
     letter-spacing: 4px;
     color: var(--text-dim);
     margin-bottom: 2rem;
@@ -133,7 +140,7 @@ body {
 #ball-track {
     position: relative;
     width: 4px;
-    height: 150px;
+    height: 200px;
     margin: 0 auto 0.6rem;
     background: linear-gradient(to right,
         rgba(180,190,210,0.15),
@@ -147,10 +154,10 @@ body {
 #ball-track::before {
     content: '★';
     position: absolute;
-    top: -22px;
+    top: -28px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 16px;
+    font-size: 22px;
     line-height: 1;
     color: var(--gold);
     text-shadow: 0 0 10px var(--gold-glow);
@@ -196,19 +203,19 @@ body {
 }
 
 #pole-sign span:first-child {
-    font-size: 1.9rem;
+    font-size: 2.5rem;
 }
 
 #pole-sign span:last-child {
-    font-size: 1.9rem;
+    font-size: 2.5rem;
 }
 
 #ball {
     position: absolute;
     left: 50%;
     top: 0;
-    width: 84px;
-    height: 84px;
+    width: 88px;
+    height: 88px;
     transform: translateX(-50%);
     border-radius: 50%;
     overflow: hidden;
@@ -325,7 +332,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    gap: 0.6rem;
+    gap: 1rem;
 }
 
 .time-unit {
@@ -337,13 +344,13 @@ body {
 
 .tile {
     font-family: 'Orbitron', sans-serif;
-    font-size: 3.4rem;
+    font-size: 5.6rem;
     font-weight: 900;
     color: #fff;
     background: linear-gradient(160deg, #20242e 0%, #0c0f16 100%);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 0.5rem 0.9rem;
+    border-radius: 16px;
+    padding: 0.7rem 1.3rem;
     box-sizing: border-box;
     width: 3.4ch;
     font-variant-numeric: tabular-nums;
@@ -356,7 +363,7 @@ body {
 }
 
 .unit-label {
-    font-size: 0.6rem;
+    font-size: 0.9rem;
     letter-spacing: 3px;
     color: var(--text-dim);
     text-transform: uppercase;
@@ -364,7 +371,7 @@ body {
 
 .colon {
     font-family: 'Orbitron', sans-serif;
-    font-size: 3rem;
+    font-size: 5rem;
     color: var(--gold);
     padding-top: 0.4rem;
     animation: blink 1s steps(1) infinite;
@@ -484,12 +491,18 @@ body {
     position: absolute;
     inset: 0;
     display: none;
+    opacity: 0;
+    transition: opacity 0.8s ease;
     justify-content: center;
     align-items: center;
     flex-direction: column;
     text-align: center;
     background: radial-gradient(ellipse at center, rgba(13,17,26,0.85) 0%, rgba(8,11,16,0.95) 100%);
     z-index: 20;
+}
+
+#celebration.show {
+    opacity: 1;
 }
 
 #celebration h1 {
@@ -557,12 +570,49 @@ canvas {
     height: 100vh;
     pointer-events: none;
 }
+
+/* Audio on/off toggle */
+#audio-toggle {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    z-index: 40;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    line-height: 1;
+    cursor: pointer;
+    color: rgba(192, 200, 216, 0.35);
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 50%;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    opacity: 0.35;
+    transition: opacity 0.25s ease, color 0.25s ease, background 0.25s ease;
+    user-select: none;
+}
+
+#audio-toggle:hover {
+    opacity: 1;
+    color: var(--gold);
+    background: rgba(0, 0, 0, 0.5);
+}
+
+#audio-toggle.muted {
+    color: rgba(192, 200, 216, 0.3);
+}
 </style>
 </head>
 
 <body>
 
 <div id="skyline"></div>
+
+<button id="audio-toggle" title="Toggle sound" aria-label="Toggle sound">🔊</button>
 
 <div class="spotlight" style="left:10%"></div>
 <div class="spotlight" style="left:60%"></div>
@@ -631,21 +681,36 @@ const cardEl = document.getElementById("card");
 
 const pad = n => String(n).padStart(2, "0");
 let lastSecond = null;
+let finaleTriggered = false;
 
 function updateCountdown() {
     const now = new Date();
     const diff = TARGET - now;
-
-    if (diff <= 0) {
-        startCelebration();
-        return;
-    }
-
     const total = Math.floor(diff / 1000);
 
-    // Skip showing "0" — go straight to celebration once the last second elapses
+    // Zero moment: land on "0", fire the final beep, then transition
     if (total <= 0) {
-        startCelebration();
+        if (!finaleTriggered) {
+            finaleTriggered = true;
+
+            countdownEl.classList.add("big");
+            cardEl.classList.add("finale");
+            seLabelEl.textContent = "Seconds Left";
+            seEl.textContent = 0;
+            seEl.classList.remove("tick");
+            void seEl.offsetWidth;   // force reflow
+            seEl.classList.add("tick");
+            ballEl.style.top = "96px";
+
+            // Final, highest beep fires BEFORE the Happy New Year moment
+            beep(1380);
+
+            // Small pause on 0, fade the card out, then reveal the celebration
+            setTimeout(() => {
+                cardEl.classList.add("fade-out");
+                setTimeout(startCelebration, 650);
+            }, 800);
+        }
         return;
     }
 
@@ -677,8 +742,7 @@ function updateCountdown() {
 
             // Rising pitch in the final 3 seconds for extra tension
             beep(total <= 3 ? 660 + (4 - total) * 180 : 880);
-            lastSecond = s;
-        }
+            lastSecond = s;        }
     } else {
         countdownEl.classList.remove("big");
         cardEl.classList.remove("finale");
@@ -767,6 +831,7 @@ class Rocket {
 
     explode() {
         this.exploded = true;
+        fireworkBoom();
         const count = 110 + Math.floor(Math.random() * 50);
         // Main ring burst
         for (let i = 0; i < count; i++) {
@@ -938,25 +1003,177 @@ function drawConfetti() {
 
 // ─── AUDIO (Web Audio API — no external files needed) ────────────────────────
 let audioCtx = null;
+let masterGain = null;
+let soundEnabled = true;
 function getCtx() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        masterGain = audioCtx.createGain();
+        masterGain.gain.value = soundEnabled ? 1 : 0;
+        masterGain.connect(audioCtx.destination);
+    }
     return audioCtx;
 }
+// All Web Audio nodes route through this so one switch controls everything
+function audioOut() {
+    getCtx();
+    return masterGain;
+}
 
-// Countdown tick beep
-function beep(freq = 880) {
+// ─── SAMPLE PLAYBACK (real MP3 files via <audio> — works even over file://) ────
+// fetch()/decodeAudioData is blocked on the file:// protocol, so we use plain
+// HTMLAudioElements which are allowed to load local media files.
+const soundElements = {};   // name -> template HTMLAudioElement
+const soundFailed   = {};   // name -> true if the file couldn't load
+const activeSounds  = new Set();   // currently-playing MP3 clones (for muting)
+
+function loadSound(name, url) {
+    const a = new Audio();
+    a.preload = "auto";
+    a.src = url;
+    a.addEventListener("error", () => { soundFailed[name] = true; }, { once: true });
+    a.load();
+    soundElements[name] = a;
+}
+
+// Play a sample (clones the element so bursts can overlap).
+// Returns true if playback was triggered, false if the file isn't available.
+function playSound(name, volume = 1, rate = 1) {
+    if (!soundEnabled) return false;
+    const base = soundElements[name];
+    if (!base || soundFailed[name]) return false;
+    try {
+        const a = base.cloneNode(true);
+        a.volume = Math.max(0, Math.min(1, volume));
+        a.playbackRate = rate;
+        activeSounds.add(a);
+        const cleanup = () => activeSounds.delete(a);
+        a.addEventListener("ended", cleanup, { once: true });
+        a.addEventListener("pause", cleanup, { once: true });
+        a.play().catch(() => {});
+        return true;
+    } catch (e) { return false; }
+}
+
+// Preload the celebration audio files
+loadSound("fireworks", "audio/fireworks.mp3");
+loadSound("cheer",     "audio/happynewyearcheer.mp3");
+
+// ─── AUDIO UNLOCK ─────────────────────────────────────────────────────────────
+// Browsers block audio until the page is "activated". We attempt to autoplay
+// immediately and also unlock on the first sign of activity, so in practice
+// sound starts on its own (or the instant the tab gets any activation).
+let audioUnlocked = false;
+function unlockAudio() {
+    if (audioUnlocked) return;
+    try { const c = getCtx(); if (c.state === "suspended") c.resume(); } catch (e) {}
+    // Prime the MP3 elements so they're allowed to play later
+    let primed = true;
+    Object.values(soundElements).forEach(a => {
+        const p = a.play();
+        if (p && p.then) {
+            p.then(() => { a.pause(); a.currentTime = 0; }).catch(() => { primed = false; });
+        }
+    });
+    // Only latch as unlocked once the context is actually running
+    try {
+        if (getCtx().state === "running") audioUnlocked = true;
+    } catch (e) {}
+    // If a celebration is already waiting on audio, fire it now
+    if (audioUnlocked && typeof flushPendingAudio === "function") flushPendingAudio();
+}
+
+// Try right away (works if the browser/site already allows autoplay)
+unlockAudio();
+window.addEventListener("load", unlockAudio, { once: true });
+document.addEventListener("visibilitychange", () => { if (!document.hidden) unlockAudio(); });
+
+// And unlock on the first real user activation, whatever it is
+["pointerdown", "pointermove", "keydown", "touchstart", "click", "scroll", "focus", "mousemove"]
+    .forEach(ev => window.addEventListener(ev, unlockAudio, { passive: true }));
+
+// Keep gently retrying until audio is permitted
+const unlockPoll = setInterval(() => {
+    unlockAudio();
+    if (audioUnlocked) clearInterval(unlockPoll);
+}, 400);
+
+// ─── AUDIO TOGGLE BUTTON ──────────────────────────────────────────────────────
+const audioToggle = document.getElementById("audio-toggle");
+function applyMuteState() {
+    audioToggle.textContent = soundEnabled ? "🔊" : "🔇";
+    audioToggle.classList.toggle("muted", !soundEnabled);
+    audioToggle.title = soundEnabled ? "Mute sound" : "Unmute sound";
+    if (masterGain) masterGain.gain.value = soundEnabled ? 1 : 0;
+    if (!soundEnabled) {
+        // Stop any MP3 clips that are currently playing
+        activeSounds.forEach(a => { try { a.pause(); a.currentTime = 0; } catch (e) {} });
+        activeSounds.clear();
+        if ("speechSynthesis" in window) {
+            try { window.speechSynthesis.cancel(); } catch (e) {}
+        }
+    }
+}
+audioToggle.addEventListener("click", (e) => {
+    e.stopPropagation();
+    soundEnabled = !soundEnabled;
+    if (soundEnabled) unlockAudio();   // make sure audio is permitted again
+    applyMuteState();
+});
+applyMuteState();
+
+// Throttle so overlapping explosions don't stack the sample too aggressively
+let lastBoomSample = 0;
+
+// Countdown tick beep — punchy two-tone blip
+function beep(freq = 880, opts = {}) {
     try {
         const ctx = getCtx();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.value = freq;
-        gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + 0.01);
-        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.18);
-        osc.connect(gain).connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.2);
+        const now = ctx.currentTime;
+        const dur = opts.dur || 0.18;
+        const peak = opts.peak || 0.3;
+
+        // Master gain for this blip
+        const master = ctx.createGain();
+        master.gain.setValueAtTime(0.0001, now);
+        master.gain.exponentialRampToValueAtTime(peak, now + 0.008);
+        master.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+        master.connect(audioOut());
+
+        // Fundamental + a bright harmonic for a richer, more "electronic" tick
+        const partials = [[freq, "triangle", 1], [freq * 2, "sine", 0.35]];
+        for (const [f, type, level] of partials) {
+            const osc = ctx.createOscillator();
+            const g = ctx.createGain();
+            osc.type = type;
+            osc.frequency.value = f;
+            g.gain.value = level;
+            osc.connect(g).connect(master);
+            osc.start(now);
+            osc.stop(now + dur + 0.05);
+        }
+    } catch (e) {}
+}
+
+// Big final "GO" chime for the zero moment
+function finalChime() {
+    try {
+        const ctx = getCtx();
+        const now = ctx.currentTime;
+        const freqs = [523.25, 659.25, 783.99, 1046.5]; // C-E-G-C major chord
+        freqs.forEach((f, i) => {
+            const osc = ctx.createOscillator();
+            const g = ctx.createGain();
+            osc.type = "triangle";
+            osc.frequency.value = f;
+            const t = now + i * 0.04;
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime(0.28, t + 0.02);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + 1.4);
+            osc.connect(g).connect(audioOut());
+            osc.start(t);
+            osc.stop(t + 1.5);
+        });
     } catch (e) {}
 }
 
@@ -983,7 +1200,7 @@ function playAuldLangSyne() {
             gain.gain.setValueAtTime(0.0001, t);
             gain.gain.exponentialRampToValueAtTime(0.25, t + 0.04);
             gain.gain.exponentialRampToValueAtTime(0.0001, t + dur * 0.95);
-            osc.connect(gain).connect(ctx.destination);
+            osc.connect(gain).connect(audioOut());
             osc.start(t);
             osc.stop(t + dur);
             t += dur;
@@ -991,15 +1208,167 @@ function playAuldLangSyne() {
     } catch (e) {}
 }
 
+// Firework explosion — low boom + crackle
+function fireworkBoom() {
+    // Prefer the real firework recording; throttle so rapid volleys don't overload
+    const nowMs = performance.now();
+    if (soundElements["fireworks"] && !soundFailed["fireworks"] && nowMs - lastBoomSample > 90) {
+        lastBoomSample = nowMs;
+        // Slight random volume + pitch variation for a natural, varied show
+        if (playSound("fireworks", 0.5 + Math.random() * 0.35, 0.92 + Math.random() * 0.18)) return;
+    }
+    try {
+        const ctx = getCtx();
+        const now = ctx.currentTime;
+
+        // Low-frequency boom (the "thump" of the blast)
+        const boom = ctx.createOscillator();
+        const boomGain = ctx.createGain();
+        boom.type = "sine";
+        boom.frequency.setValueAtTime(150, now);
+        boom.frequency.exponentialRampToValueAtTime(40, now + 0.35);
+        boomGain.gain.setValueAtTime(0.0001, now);
+        boomGain.gain.exponentialRampToValueAtTime(0.4, now + 0.02);
+        boomGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
+        boom.connect(boomGain).connect(audioOut());
+        boom.start(now);
+        boom.stop(now + 0.5);
+
+        // Noise burst for the crackle/sparkle
+        const dur = 0.6;
+        const buffer = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < data.length; i++) {
+            // Decaying noise
+            data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 2);
+        }
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+        const noiseFilter = ctx.createBiquadFilter();
+        noiseFilter.type = "bandpass";
+        noiseFilter.frequency.setValueAtTime(1200, now);
+        noiseFilter.frequency.exponentialRampToValueAtTime(400, now + dur);
+        const noiseGain = ctx.createGain();
+        noiseGain.gain.setValueAtTime(0.25, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+        noise.connect(noiseFilter).connect(noiseGain).connect(audioOut());
+        noise.start(now);
+        noise.stop(now + dur);
+    } catch (e) {}
+}
+
+// Crowd cheering — layered filtered noise swells + a few whistles
+function crowdCheer(intensity = 1) {
+    try {
+        const ctx = getCtx();
+        const now = ctx.currentTime;
+        const dur = 2.4 + Math.random() * 1.5;
+
+        // Roar: filtered noise with a swell up and slow fade
+        const buffer = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        const bp = ctx.createBiquadFilter();
+        bp.type = "bandpass";
+        bp.frequency.value = 900;
+        bp.Q.value = 0.7;
+
+        const hp = ctx.createBiquadFilter();
+        hp.type = "highpass";
+        hp.frequency.value = 400;
+
+        const g = ctx.createGain();
+        const peak = 0.18 * intensity;
+        g.gain.setValueAtTime(0.0001, now);
+        g.gain.linearRampToValueAtTime(peak, now + 0.5);     // swell in
+        g.gain.linearRampToValueAtTime(peak * 0.8, now + dur * 0.6);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + dur); // fade out
+        noise.connect(bp).connect(hp).connect(g).connect(audioOut());
+        noise.start(now);
+        noise.stop(now + dur);
+
+        // A couple of celebratory whistles
+        const whistles = Math.floor(Math.random() * 3);
+        for (let i = 0; i < whistles; i++) {
+            const t = now + 0.3 + Math.random() * (dur - 1);
+            const osc = ctx.createOscillator();
+            const wg = ctx.createGain();
+            osc.type = "sine";
+            const base = 1600 + Math.random() * 800;
+            osc.frequency.setValueAtTime(base, t);
+            osc.frequency.linearRampToValueAtTime(base + 400, t + 0.15);
+            osc.frequency.linearRampToValueAtTime(base - 200, t + 0.4);
+            wg.gain.setValueAtTime(0.0001, t);
+            wg.gain.exponentialRampToValueAtTime(0.08, t + 0.05);
+            wg.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+            osc.connect(wg).connect(audioOut());
+            osc.start(t);
+            osc.stop(t + 0.55);
+        }
+    } catch (e) {}
+}
+
+// Realistic spoken "Happy New Year!" via the browser's speech engine
+function speakHappyNewYear() {
+    try {
+        if (!soundEnabled) return;
+        if (!("speechSynthesis" in window)) return;
+        const say = () => {
+            const u = new SpeechSynthesisUtterance("Happy New Year!");
+            u.rate = 0.95;
+            u.pitch = 1.1;
+            u.volume = 1;
+            // Prefer a natural-sounding English voice if available
+            const voices = window.speechSynthesis.getVoices();
+            const preferred = voices.find(v =>
+                /Google US English|Microsoft (Aria|Jenny|Zira|Guy)|Samantha|Natural/i.test(v.name)
+            ) || voices.find(v => /^en[-_]/i.test(v.lang));
+            if (preferred) u.voice = preferred;
+            window.speechSynthesis.speak(u);
+        };
+        // Voices may load asynchronously
+        if (window.speechSynthesis.getVoices().length === 0) {
+            window.speechSynthesis.addEventListener("voiceschanged", say, { once: true });
+            setTimeout(say, 250); // fallback if the event never fires
+        } else {
+            say();
+        }
+    } catch (e) {}
+}
+
 // ─── CELEBRATION ──────────────────────────────────────────────────────────────
 let celebrationStarted = false;
+let cheerPlayed = false;
+
+// Called when audio becomes available — plays the cheer if it's still pending
+function flushPendingAudio() {
+    if (celebrationStarted && !cheerPlayed) {
+        if (playSound("cheer", 0.9)) cheerPlayed = true;
+    }
+}
+
 function startCelebration() {
     if (celebrationStarted) return;
     celebrationStarted = true;
 
     celebrationEl.style.display = "flex";
+    // Fade in on the next frame so the CSS transition runs
+    requestAnimationFrame(() => celebrationEl.classList.add("show"));
 
-    playAuldLangSyne();
+    // The big moment: chime, then the real crowd cheer (or synth fallback)
+    finalChime();
+    if (playSound("cheer", 0.9)) {
+        cheerPlayed = true;
+    } else {
+        // Audio not permitted yet — use the synth cheer now, and the MP3 will
+        // play automatically the instant audio unlocks (see flushPendingAudio)
+        crowdCheer(1.4);
+        setTimeout(speakHappyNewYear, 700);
+    }
+    setTimeout(playAuldLangSyne, 2600);
 
     fwRunning = true;
     animateFW();
@@ -1015,6 +1384,8 @@ function startCelebration() {
     const fwInterval   = setInterval(launchFirework,     350);
     // Confetti drifts down in gentle waves every 2.5s
     const confInterval = setInterval(makeConfettiBurst, 2500);
+    // Crowd cheers roll in every few seconds
+    const cheerInterval = setInterval(() => crowdCheer(0.8 + Math.random() * 0.5), 4500);
 
     makeConfettiBurst();
 
@@ -1022,6 +1393,7 @@ function startCelebration() {
     setTimeout(() => {
         clearInterval(fwInterval);
         clearInterval(confInterval);
+        clearInterval(cheerInterval);
         fwRunning      = false;
         confettiRunning = false;
     }, 120000);
